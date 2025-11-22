@@ -134,6 +134,11 @@ The platform includes robust error handling for:
 - File I/O errors
 - Audio processing errors
 
-## License
+<div align="center">
 
-This project is open source and available under the MIT License.
+### Developed by [@leksautomate](https://youtube.com/@leksautomate)
+
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@leksautomate)
+[![TikTok](https://img.shields.io/badge/TikTok-000000?style=for-the-badge&logo=tiktok&logoColor=white)](https://tiktok.com/@leksautomate)
+
+</div>
