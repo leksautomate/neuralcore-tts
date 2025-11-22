@@ -1,0 +1,4 @@
+﻿.voice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 2rem; }
+.voice-item { padding: 1rem; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); cursor: pointer; transition: all 0.3s ease; position: relative; }
+.voice- desc { font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.5px; }
+.add-voice-btn { grid-column: 1 / -1; }

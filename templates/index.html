@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURALCORE - Voice Synthesis System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="branding">
+            <h1 class="brand-name">NEURAL<span class="brand-accent">CORE</span></h1>
+            <div class="system-info">
+                <span class="sys-item">SYS VER 1.0.2</span>
+                <span class="sys-item status-online">● ONLINE</span>
+                <span class="sys-item">LATENCY: <span id="latency">7ms</span></span>
+            </div>
+        </div>
+        <div class="system-metrics">
+            <button class="icon-btn" onclick="openSettings()" title="Settings">⚙</button>
+            <div class="theme-selector">
+                <button class="theme-btn" data-theme="cyan" title="Cyan"></button>
+                <button class="theme-btn" data-theme="green" title="Green"></button>
+                <button class="theme-btn" data-theme="red" title="Red"></button>
+                <button class="theme-btn" data-theme="purple" title="Purple"></button>
+                <button class="theme-btn" data-theme="orange" title="Orange"></button>
+            </div>
+            <div class="metric">
+                <span class="metric-label">MEM:</span>
+                <span class="metric-value" id="memoryUsage">18%</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">CPU:</span>
+                <span class="metric-value" id="cpuLoad">34%</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Sidebar - Voice Matrix -->
+        <aside class="voice-sidebar">
+            <h2 class="sidebar-title">VOICE_MATRIX</h2>
+            <div class="voice-list" id="voiceMatrix"></div>
+
+            <!-- Selected Model Info -->
+            <div class="model-info">
+                <div class="info-header">SELECTED_MODEL_ID</div>
+                <div class="info-content">
+                    <div class="info-line"><span class="info-label">ID:</span> <span id="modelId">--</span></div>
+                    <div class="info-line"><span class="info-label">DESC:</span> <span id="modelDesc">Select a
+                            voice</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="input-section">
+                <div class="section-header">
+                    <span class="section-label">INPUT_STREAM</span>
+                </div>
+                <textarea id="textInput" class="terminal-input"
+                    placeholder="// Initialize speech synthesis sequence...&#10;// Enter text payload here..."></textarea>
+                <div class="input-footer">
+                    <div class="char-counter"><span id="charCount">0</span> / 100000 CHARS</div>
+                    <div class="action-buttons">
+                        <button class="action-btn purge-btn" onclick="purgeInput()">PURGE</button>
+                        <button class="action-btn initialize-btn" onclick="generateSpeech()">INITIALIZE_SYNTH</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="progress-section" style="display: none;">
+                <div class="progress-header">SYNTHESIS_PROGRESS</div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <p id="statusText" class="status-text">PROCESSING...</p>
+            </div>
+
+            <!-- Audio Player Section -->
+            <div id="audioSection" class="audio-section" style="display: none;">
+                <div class="section-header"><span class="section-label">AUDIO_OUTPUT</span></div>
+                <audio id="audioPlayer" controls></audio>
+                <button id="downloadBtn" class="action-btn download-btn">DOWNLOAD_FILE</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Voice Modal -->
+    <div id="addVoiceModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ADD_CUSTOM_VOICE</h2>
+                <button class="modal-close" onclick="closeAddVoiceModal()">×</button>
+            </div>
+            <form id="addVoiceForm" onsubmit="addCustomVoice(event)">
+                <div class="form-group">
+                    <label for="voiceKey">VOICE_KEY</label>
+                    <input type="text" id="voiceKey" placeholder="custom_voice_1" required />
+                    <small>Unique identifier (lowercase, underscores)</small>
+                </div>
+                <div class="form-group">
+                    <label for="voiceName">VOICE_NAME</label>
+                    <input type="text" id="voiceName" placeholder="Custom Voice" required />
+                </div>
+                <div class="form-group">
+                    <label for="voiceId">SPEECHIFY_VOICE_ID</label>
+                    <input type="text" id="voiceId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required />
+                    <small>Get from Speechify API documentation</small>
+                </div>
+                <div class="form-group">
+                    <label for="voiceDescription">DESCRIPTION</label>
+                    <input type="text" id="voiceDescription" placeholder="Professional male voice" />
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn purge-btn" onclick="closeAddVoiceModal()">CANCEL</button>
+                    <button type="submit" class="action-btn initialize-btn">ADD_VOICE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>SYSTEM_SETTINGS</h2>
+                <button class="modal-close" onclick="closeSettings()">×</button>
+            </div>
+            <form id="settingsForm" onsubmit="saveSettings(event)">
+                <div class="form-group">
+                    <label for="apiToken">SPEECHIFY_API_TOKEN</label>
+                    <input type="password" id="apiToken" placeholder="Enter your API token" />
+                    <small>Your API token will be stored securely</small>
+                </div>
+                <div class="form-group">
+                    <label for="cleanupInterval">AUTO_CLEANUP_INTERVAL</label>
+                    <select id="cleanupInterval" class="form-select"
+                        style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--border); border-radius: 6px; background: rgba(0, 0, 0, 0.5); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 0.95rem;">
+                        <option value="30">30 Minutes</option>
+                        <option value="60" selected>1 Hour</option>
+                        <option value="120">2 Hours</option>
+                        <option value="360">6 Hours</option>
+                        <option value="720">12 Hours</option>
+                        <option value="1440">24 Hours</option>
+                    </select>
+                    <small>Audio files will auto-delete after this time</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn purge-btn" onclick="closeSettings()">CANCEL</button>
+                    <button type="submit" class="action-btn initialize-btn">SAVE_CONFIG</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}?v=3"></script>
+</body>
+
+</html>

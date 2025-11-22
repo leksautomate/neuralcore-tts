@@ -1,0 +1,20 @@
+{
+  "stark": {
+    "id": "fc4da0fd-52fb-4496-bd7f-b4a4e38dd57a",
+    "name": "Stark",
+    "description": "Stark voice model",
+    "custom": false
+  },
+  "liam": {
+    "id": "4a404804-3c9b-47d5-bd46-05d97122c841",
+    "name": "Liam",
+    "description": "Liam voice model",
+    "custom": false
+  },
+  "rob": {
+    "id": "rob",
+    "name": "rob",
+    "description": "United English",
+    "custom": true
+  }
+}
