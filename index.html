@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL_CORE // TTS_SYSTEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-green: #0aff0a;
+            --bg-dark: #050505;
+            --glass-bg: rgba(10, 15, 30, 0.75);
+            --glass-border: rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+        }
+
+        /* Dynamic Color Classes applied via JS */
+        .theme-cyan {
+            --neon-cyan: #00f3ff;
+        }
+
+        .theme-green {
+            --neon-cyan: #0aff0a;
+        }
+
+        .theme-red {
+            --neon-cyan: #ff2a2a;
+        }
+
+        .theme-purple {
+            --neon-cyan: #bd00ff;
+        }
+
+        .theme-gold {
+            --neon-cyan: #ffbf00;
+        }
+
+        /* CRT Scanline Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 51;
+            pointer-events: none;
+        }
+
+        /* Cyberpunk Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 2px;
+        }
+
+        /* Glitch Animation */
+        @keyframes glitch {
+            0% {
+                text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-cyan);
+            }
+
+            25% {
+                text-shadow: -2px 0 var(--neon-pink), 2px 0 var(--neon-cyan);
+            }
+
+            50% {
+                text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-cyan);
+            }
+
+            75% {
+                text-shadow: -2px 0 var(--neon-pink), 2px 0 var(--neon-cyan);
+            }
+
+            100% {
+                text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-cyan);
+            }
+        }
+
+        .glitch-hover:hover {
+            animation: glitch 0.3s infinite;
+        }
+
+        /* Custom HUD Classes */
+        .hud-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            clip-path: polygon(0 0,
+                    100% 0,
+                    100% calc(100% - 20px),
+                    calc(100% - 20px) 100%,
+                    0 100%);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .hud-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .hud-text {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Voice Card Selection */
+        .voice-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .voice-card:hover,
+        .voice-card.active {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--neon-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .voice-card.active .status-indicator {
+            background-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Input Styling */
+        textarea,
+        input[type="text"],
+        input[type="password"] {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            color: var(--neon-cyan);
+            transition: 0.3s;
+            resize: none;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Generate Button */
+        .cyber-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            transition: 0.3s;
+            z-index: -1;
+        }
+
+        .cyber-btn:hover {
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .cyber-btn:hover::before {
+            left: 0;
+        }
+
+        .cyber-btn:disabled {
+            border-color: #333;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        .cyber-btn:disabled::before {
+            display: none;
+        }
+
+        .cyber-btn:disabled:hover {
+            box-shadow: none;
+        }
+
+        /* Color Pickers */
+        .color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #333;
+            transition: transform 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .color-btn.selected {
+            border-color: white;
+            box-shadow: 0 0 10px white;
+        }
+
+        /* Audio Visualizer Bars */
+        .bar {
+            width: 6px;
+            background: var(--neon-cyan);
+            height: 4px;
+            margin: 0 2px;
+            border-radius: 2px;
+            transition: height 0.05s ease;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* History Item */
+        .history-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid #333;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: var(--neon-cyan);
+        }
+    </style>
+</head>
+
+<body class="theme-cyan">
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Visual Effects -->
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <!-- UI Layer -->
+    <div id="ui-layer" class="p-4 md:p-8">
+
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-6 shrink-0">
+            <div class="hud-panel p-4 max-w-md">
+                <h1 class="hud-text text-2xl md:text-4xl font-bold text-white mb-1 glitch-hover">NEURAL<span
+                        style="color:var(--neon-cyan)">CORE</span></h1>
+                <div class="flex items-center text-xs text-gray-400 space-x-4">
+                    <span>SYS.VER.5.1.0</span>
+                    <span class="text-green-500">● ONLINE</span>
+                    <span>LATENCY: <span id="latency">12</span>ms</span>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <!-- History Button -->
+                <button onclick="toggleHistory()"
+                    class="hud-panel p-4 flex items-center justify-center hover:bg-white/10 transition-colors group"
+                    title="DATA ARCHIVES">
+                    <i class="fas fa-history text-xl" style="color:var(--neon-cyan)"></i>
+                </button>
+
+                <!-- Settings Button -->
+                <button onclick="toggleSettings()"
+                    class="hud-panel p-4 flex items-center justify-center hover:bg-white/10 transition-colors group"
+                    title="SYSTEM CONFIG">
+                    <i class="fas fa-cog text-xl group-hover:rotate-90 transition-transform duration-500"
+                        style="color:var(--neon-cyan)"></i>
+                </button>
+
+                <div class="hidden md:block hud-panel p-4 w-64">
+                    <div class="text-right text-xs">
+                        <div class="mb-1">STORAGE_USED: <span id="storage-display">0</span> MB</div>
+                        <div class="w-full h-1 bg-gray-800 ml-auto">
+                            <div id="storage-bar" class="h-full" style="background:var(--neon-cyan); width: 5%"></div>
+                        </div>
+                        <div class="mt-2 mb-1">CPU_LOAD: 34%</div>
+                        <div class="w-full h-1 bg-gray-800 ml-auto">
+                            <div class="h-full bg-pink-500" style="width: 34%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 w-full flex justify-center pb-20">
+            <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Left Column: Voice Selection -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="hud-panel p-5 h-full flex flex-col">
+                        <h2 class="hud-text text-lg mb-4 border-b border-gray-800 pb-2">VOICE_MATRIX</h2>
+                        <div class="space-y-3 overflow-y-auto max-h-[400px] pr-2" id="voice-list">
+                            <!-- Voices generated by JS -->
+                        </div>
+
+                        <div class="mt-auto pt-4">
+                            <div class="p-3 border border-dashed border-gray-700 bg-black/30">
+                                <div class="text-xs text-gray-500 mb-1">SELECTED_MODEL_ID</div>
+                                <div id="model-id-display" class="text-[10px] break-all font-mono"
+                                    style="color:var(--neon-cyan)">WAITING_FOR_INPUT...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Column: Input & Controls -->
+                <div class="lg:col-span-8 flex flex-col gap-4">
+                    <!-- Terminal Input -->
+                    <div class="hud-panel p-1 flex-1 relative group flex flex-col min-h-[300px]">
+                        <div class="absolute top-0 left-0 text-black text-[10px] px-2 py-0.5 font-bold z-10"
+                            style="background:var(--neon-cyan)">INPUT_STREAM</div>
+                        <textarea id="text-input"
+                            class="w-full h-full p-6 pt-8 font-mono text-sm md:text-base bg-transparent border-none focus:ring-0"
+                            placeholder="// Initialize speech synthesis sequence...&#10;// Enter text payload here..."></textarea>
+                        <div class="absolute bottom-2 right-4 text-xs text-gray-500 bg-black/50 px-2" id="char-count">0
+                            / 100000 CHARS</div>
+                    </div>
+
+                    <!-- Control Matrix -->
+                    <div class="hud-panel p-5 shrink-0">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <!-- Audio Visualizer -->
+                            <div class="flex items-end h-12 gap-1 w-full md:w-1/2 overflow-hidden" id="visualizer">
+                                <!-- Bars generated by JS -->
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex gap-4 w-full md:w-auto shrink-0">
+                                <button onclick="clearText()"
+                                    class="px-4 py-3 border border-red-900 text-red-500 hover:bg-red-900/20 hover:text-red-400 font-mono text-sm transition-colors uppercase tracking-wider whitespace-nowrap"
+                                    title="CLEAR INPUT">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+
+                                <button id="download-btn" onclick="downloadCurrentAudio()" disabled
+                                    class="cyber-btn px-4 py-3 flex items-center justify-center gap-2 disabled:opacity-50"
+                                    title="DOWNLOAD ARTIFACT">
+                                    <i class="fas fa-download"></i>
+                                </button>
+
+                                <button onclick="initializeSynthesis()"
+                                    class="cyber-btn px-8 py-3 w-full md:w-auto whitespace-nowrap flex items-center justify-center gap-2">
+                                    <i class="fas fa-play text-xs"></i> INITIALIZE_SYNTHESIS
+                                </button>
+                            </div>
+                        </div>
+                        <div id="player-status" class="text-[10px] text-center mt-2 text-gray-500 h-4">READY</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-auto shrink-0 pb-4">
+            <div
+                class="hud-panel p-2 text-center md:text-left md:flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest">
+                <div>SECURE CONNECTION ESTABLISHED // TSL 1.3</div>
+                <div class="hidden md:block">SYSTEM_ID: 0x4A92-F</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="hud-panel p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300"
+            id="settings-content">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-2">
+                <h2 class="hud-text text-xl text-white">SYSTEM_CONFIGURATION</h2>
+                <button onclick="toggleSettings()" class="text-gray-500 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Speechify API Token</label>
+                    <input type="password" id="api-key-input" class="w-full p-3 text-sm"
+                        placeholder="Enter your API Key...">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Data Chunk Size
+                        (Chars)</label>
+                    <input type="number" id="chunk-size-input" class="w-full p-3 text-sm" value="1900" max="5000">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Core Energy Color</label>
+                    <div class="flex gap-4">
+                        <button onclick="setTheme('cyan')" class="color-btn bg-[#00f3ff] selected"
+                            data-theme="cyan"></button>
+                        <button onclick="setTheme('green')" class="color-btn bg-[#0aff0a]" data-theme="green"></button>
+                        <button onclick="setTheme('red')" class="color-btn bg-[#ff2a2a]" data-theme="red"></button>
+                        <button onclick="setTheme('purple')" class="color-btn bg-[#bd00ff]"
+                            data-theme="purple"></button>
+                        <button onclick="setTheme('gold')" class="color-btn bg-[#ffbf00]" data-theme="gold"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button onclick="saveSettings()" class="cyber-btn px-6 py-2 text-sm">SAVE_CONFIG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="hud-panel p-8 max-w-3xl w-full mx-4 transform scale-95 transition-transform duration-300 h-[80vh] flex flex-col"
+            id="history-content">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-2 shrink-0">
+                <h2 class="hud-text text-xl text-white">DATA_ARCHIVES // LOCAL_HOST_ONLY</h2>
+                <button onclick="toggleHistory()" class="text-gray-500 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-2" id="history-list">
+                <!-- History items generated here -->
+                <div class="text-center text-gray-500 mt-10 font-mono text-xs">NO DATA ARCHIVED</div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-800 shrink-0 flex justify-between items-center">
+                <div class="text-[10px] text-gray-500">DATA STORED LOCALLY VIA INDEXEDDB // AUTO-PURGE: 20 MIN</div>
+                <button onclick="clearHistory()"
+                    class="text-red-500 text-xs hover:text-red-400 uppercase tracking-wider">PURGE ALL ARCHIVES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Messages Overlay -->
+    <div id="sys-msg"
+        class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 opacity-0 transition-opacity duration-300">
+        <div class="bg-black border p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)]" style="border-color:var(--neon-cyan)">
+            <h3 class="font-bold text-xl mb-2 glitch-hover" style="color:var(--neon-cyan)">PROCESSING DATA</h3>
+            <div class="w-64 h-1 bg-gray-800">
+                <div id="progress-bar" class="h-full w-0" style="background:var(--neon-cyan)"></div>
+            </div>
+            <div class="text-xs mt-2 font-mono text-gray-400" id="loading-text">Allocating neural resources...</div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATABASE (INDEXEDDB) ---
+        const DB_NAME = 'NeuralCoreDB';
+        const STORE_NAME = 'audio_archives';
+        const DB_VERSION = 1;
+        const RETENTION_MS = 20 * 60 * 1000; // 20 Minutes
+        const CHECK_INTERVAL = 60000; // Check every minute
+        let db;
+
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (event) => {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                updateStorageUsage();
+
+                // Initialize Auto-Purge System
+                cleanupOldArchives();
+                setInterval(cleanupOldArchives, CHECK_INTERVAL);
+            };
+            request.onerror = (event) => {
+                console.error("DB Error:", event.target.errorCode);
+            };
+        }
+
+        function cleanupOldArchives() {
+            if (!db) return;
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index('timestamp');
+            const cutoffTime = new Date().getTime() - RETENTION_MS;
+
+            // Iterate through archives and delete expired ones
+            const request = index.openCursor();
+            let deletedCount = 0;
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (cursor.value.timestamp < cutoffTime) {
+                        // Item is expired
+                        const deleteRequest = cursor.delete();
+                        deleteRequest.onsuccess = () => {
+                            deletedCount++;
+                        };
+                    }
+                    cursor.continue();
+                } else {
+                    // Iteration complete
+                    if (deletedCount > 0) {
+                        console.log(`SYSTEM: AUTO-PURGED ${deletedCount} EXPIRED ARTIFACTS`);
+                        updateStorageUsage();
+                        // Refresh list if modal is open
+                        if (document.getElementById('history-modal').classList.contains('open')) {
+                            renderHistory();
+                        }
+                    }
+                }
+            };
+        }
+
+        function saveToHistory(text, voiceId, blob) {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const entry = {
+                text: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+                fullText: text,
+                voiceId: voiceId,
+                timestamp: new Date().getTime(),
+                audioBlob: blob
+            };
+            store.add(entry);
+            transaction.oncomplete = () => {
+                updateStorageUsage();
+            };
+        }
+
+        function getAllHistory(callback) {
+            if (!db) return;
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index('timestamp');
+            const request = index.openCursor(null, 'prev'); // Newest first
+            const results = [];
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    results.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    callback(results);
+                }
+            };
+        }
+
+        function deleteHistoryItem(id) {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            store.delete(id);
+            transaction.oncomplete = () => {
+                renderHistory();
+                updateStorageUsage();
+            };
+        }
+
+        function clearHistory() {
+            if (!confirm("WARNING: PERMANENT DELETION\n\nThis will wipe all locally saved audio files. Proceed?")) return;
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            store.clear();
+            transaction.oncomplete = () => {
+                renderHistory();
+                updateStorageUsage();
+            };
+        }
+
+        function updateStorageUsage() {
+            // Approximate usage check
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const mbUsed = (estimate.usage / 1024 / 1024).toFixed(2);
+                    document.getElementById('storage-display').innerText = mbUsed;
+                    // Mock max 500mb for visuals
+                    const percent = Math.min((mbUsed / 500) * 100, 100);
+                    document.getElementById('storage-bar').style.width = `${Math.max(percent, 1)}%`;
+                });
+            }
+        }
+
+        // --- THREE.JS BACKGROUND ---
+        let threeObj = null;
+        const initThreeJS = () => {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.02);
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.IcosahedronGeometry(10, 2);
+            const material = new THREE.PointsMaterial({
+                color: getComputedStyle(document.body).getPropertyValue('--neon-cyan').trim(),
+                size: 0.15,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            const sphere = new THREE.Points(geometry, material);
+            scene.add(sphere);
+
+            const ringGeo = new THREE.TorusGeometry(18, 0.1, 16, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true, transparent: true, opacity: 0.3 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1000;
+            const posArray = new Float32Array(particlesCount * 3);
+            for (let i = 0; i < particlesCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 100;
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.2 });
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            const clock = new THREE.Clock();
+            let pulseSpeed = 1;
+
+            const animate = () => {
+                const elapsedTime = clock.getElapsedTime();
+                const scale = 1 + Math.sin(elapsedTime * 2 * pulseSpeed) * 0.05;
+                sphere.scale.set(scale, scale, scale);
+                sphere.rotation.y += 0.005 * pulseSpeed;
+                sphere.rotation.x += 0.002 * pulseSpeed;
+                ring.rotation.z -= 0.002;
+                ring.rotation.x = (Math.PI / 2) + Math.sin(elapsedTime) * 0.1;
+                particlesMesh.rotation.y = elapsedTime * 0.05;
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            };
+            animate();
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            return { sphere, material, setPulse: (s) => pulseSpeed = s };
+        };
+
+        // --- STATE & CONFIG ---
+        const DEFAULT_API_KEY = "ZmQjuE6pVWvJ0g8wwUOvSBpbxPD0qFOAZoGV1ap_Crg=";
+        let config = {
+            apiKey: localStorage.getItem('tts_api_key') || DEFAULT_API_KEY,
+            chunkSize: parseInt(localStorage.getItem('tts_chunk_size')) || 1900,
+            theme: localStorage.getItem('tts_theme') || 'cyan'
+        };
+
+        const voices = [
+            { id: 'fc4da0fd-52fb-4496-bd7f-b4a4e38dd57a', name: 'STARK', type: 'MALE // NARRATIVE', desc: 'Deep. Authoritative. Cinematic.' },
+            { id: '4a404804-3c9b-47d5-bd46-05d97122c841', name: 'LIAM', type: 'MALE // CASUAL', desc: 'Friendly. Conversational. Clear.' },
+            { id: 'simba-english', name: 'SIMBA', type: 'DEFAULT // ENGLISH', desc: 'Standard English Model.' }
+        ];
+
+        let selectedVoice = voices[0].id;
+        let currentAudioBlob = null;
+        let currentAudioUrl = null;
+        let audioObj = new Audio();
+
+        // --- UI LOGIC ---
+        const initUI = () => {
+            initDB(); // Init Database
+            threeObj = initThreeJS();
+            setTheme(config.theme);
+            document.getElementById('api-key-input').value = config.apiKey;
+            document.getElementById('chunk-size-input').value = config.chunkSize;
+
+            const list = document.getElementById('voice-list');
+            voices.forEach(voice => {
+                const el = document.createElement('div');
+                el.className = `voice-card p-3 flex justify-between items-center ${voice.id === selectedVoice ? 'active' : ''}`;
+                el.onclick = () => selectVoice(voice.id, el);
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold text-white">${voice.name}</div>
+                        <div class="text-[10px] text-gray-400">${voice.type}</div>
+                    </div>
+                    <div class="status-indicator w-2 h-2 rounded-full bg-gray-700 shadow-[0_0_5px_rgba(0,0,0,0.5)]"></div>
+                `;
+                list.appendChild(el);
+            });
+            updateModelDisplay(selectedVoice);
+
+            const viz = document.getElementById('visualizer');
+            for (let i = 0; i < 40; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                viz.appendChild(bar);
+            }
+            const textarea = document.getElementById('text-input');
+            const charCount = document.getElementById('char-count');
+            textarea.addEventListener('input', (e) => {
+                charCount.innerText = `${e.target.value.length} / 100000 CHARS`;
+            });
+        };
+
+        function selectVoice(id, element) {
+            selectedVoice = id;
+            document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            updateModelDisplay(id);
+            triggerVisualizerPulse(5);
+        }
+
+        function updateModelDisplay(id) {
+            const voice = voices.find(v => v.id === id);
+            document.getElementById('model-id-display').innerText = `ID: ${id}\nDESC: ${voice?.desc || 'N/A'}`;
+        }
+
+        function clearText() {
+            document.getElementById('text-input').value = '';
+            document.getElementById('char-count').innerText = '0 / 100000 CHARS';
+        }
+
+        // --- MODAL HANDLERS ---
+        function toggleSettings() {
+            toggleModal('settings-modal', 'settings-content');
+        }
+
+        function toggleHistory() {
+            toggleModal('history-modal', 'history-content');
+            if (document.getElementById('history-modal').classList.contains('open')) {
+                renderHistory();
+            }
+        }
+
+        function toggleModal(modalId, contentId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(contentId);
+
+            if (modal.classList.contains('open')) {
+                modal.classList.remove('open');
+                content.classList.remove('scale-100');
+                content.classList.add('scale-95');
+            } else {
+                modal.classList.add('open');
+                setTimeout(() => {
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                }, 10);
+            }
+        }
+
+        function saveSettings() {
+            config.apiKey = document.getElementById('api-key-input').value;
+            config.chunkSize = parseInt(document.getElementById('chunk-size-input').value);
+            localStorage.setItem('tts_api_key', config.apiKey);
+            localStorage.setItem('tts_chunk_size', config.chunkSize);
+            localStorage.setItem('tts_theme', config.theme);
+            toggleSettings();
+            alert("SYSTEM CONFIGURATION UPDATED");
+        }
+
+        function setTheme(themeName) {
+            config.theme = themeName;
+            document.body.className = `theme-${themeName}`;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                if (btn.dataset.theme === themeName) btn.classList.add('selected');
+                else btn.classList.remove('selected');
+            });
+            if (threeObj) {
+                const colorHex = getComputedStyle(document.body).getPropertyValue('--neon-cyan').trim();
+                threeObj.material.color.set(colorHex);
+            }
+        }
+
+        // --- HISTORY LOGIC ---
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            container.innerHTML = '<div class="text-center text-gray-500 mt-4"><i class="fas fa-spinner fa-spin"></i> ACCESSING DRIVES...</div>';
+
+            getAllHistory((items) => {
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="text-center text-gray-500 mt-10 font-mono text-xs">NO DATA ARCHIVED</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                items.forEach(item => {
+                    const date = new Date(item.timestamp);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    const div = document.createElement('div');
+                    div.className = 'history-item p-3 flex justify-between items-center mb-2';
+                    div.innerHTML = `
+                        <div class="overflow-hidden mr-4">
+                            <div class="text-[10px] text-gray-500 font-mono">${dateStr} // ${item.voiceId}</div>
+                            <div class="text-sm text-white truncate w-64 md:w-96 font-mono">"${item.text}"</div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="playHistoryItem(${item.id})" class="text-cyan-400 hover:text-white px-2" title="LOAD & PLAY"><i class="fas fa-play"></i></button>
+                            <button onclick="downloadHistoryItem(${item.id})" class="text-green-400 hover:text-white px-2" title="DOWNLOAD"><i class="fas fa-download"></i></button>
+                            <button onclick="deleteHistoryItem(${item.id})" class="text-red-500 hover:text-white px-2" title="DELETE"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function playHistoryItem(id) {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = () => {
+                const item = request.result;
+                playBlob(item.audioBlob);
+                toggleHistory(); // Close modal
+            };
+        }
+
+        function downloadHistoryItem(id) {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = () => {
+                const item = request.result;
+                downloadBlob(item.audioBlob, `neural_core_${item.timestamp}.mp3`);
+            };
+        }
+
+        // --- VISUALIZER ---
+        let visualizerInterval;
+        function startVisualizer() {
+            clearInterval(visualizerInterval);
+            visualizerInterval = setInterval(() => {
+                const bars = document.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    const h = Math.random() * 25 + 5;
+                    bar.style.height = `${h}px`;
+                });
+            }, 50);
+            if (threeObj) threeObj.setPulse(3);
+        }
+
+        function stopVisualizer() {
+            clearInterval(visualizerInterval);
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => bar.style.height = '4px');
+            if (threeObj) threeObj.setPulse(1);
+        }
+
+        function triggerVisualizerPulse(intensity) {
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => {
+                const h = Math.random() * intensity + 4;
+                bar.style.height = `${h}px`;
+            });
+        }
+
+        // --- CORE SYNTHESIS LOGIC ---
+        async function initializeSynthesis() {
+            const text = document.getElementById('text-input').value.trim();
+            if (!text) {
+                alert("ERR: NULL_PAYLOAD // ENTER TEXT");
+                return;
+            }
+
+            const sysMsg = document.getElementById('sys-msg');
+            const progressBar = document.getElementById('progress-bar');
+            const loadingText = document.getElementById('loading-text');
+            const dlBtn = document.getElementById('download-btn');
+
+            sysMsg.style.opacity = '1';
+            progressBar.style.width = '5%';
+            dlBtn.disabled = true;
+
+            try {
+                loadingText.innerText = "Analyzing syntactic structure...";
+                const chunks = splitText(text, config.chunkSize);
+
+                loadingText.innerText = "Establishing Neural Uplink...";
+                const audioBlobs = [];
+
+                for (let i = 0; i < chunks.length; i++) {
+                    loadingText.innerText = `Synthesizing Block ${i + 1}/${chunks.length}...`;
+                    progressBar.style.width = `${10 + ((i + 1) / chunks.length) * 80}%`;
+
+                    const base64 = await fetchSpeechify(chunks[i], selectedVoice);
+                    // Convert Base64 to Blob immediately
+                    const byteCharacters = atob(base64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let j = 0; j < byteCharacters.length; j++) {
+                        byteNumbers[j] = byteCharacters.charCodeAt(j);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    audioBlobs.push(byteArray); // Push raw bytes for concat
+                }
+
+                loadingText.innerText = "Compiling Audio Artifacts...";
+
+                // Concatenate all chunks into one Blob
+                const combinedBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
+                currentAudioBlob = combinedBlob;
+
+                // Auto-save to history
+                saveToHistory(text, selectedVoice, combinedBlob);
+
+                // Enable Download
+                dlBtn.disabled = false;
+
+                // Play
+                progressBar.style.width = '100%';
+                loadingText.innerText = "Synthesis Complete. Playback Initialized.";
+
+                setTimeout(() => {
+                    sysMsg.style.opacity = '0';
+                    progressBar.style.width = '0';
+                    playBlob(combinedBlob);
+                }, 500);
+
+            } catch (error) {
+                console.error(error);
+                alert(`SYSTEM ERROR: ${error.message}`);
+                sysMsg.style.opacity = '0';
+            }
+        }
+
+        function playBlob(blob) {
+            if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+            currentAudioUrl = URL.createObjectURL(blob);
+
+            audioObj.src = currentAudioUrl;
+            audioObj.onplay = () => {
+                startVisualizer();
+                document.getElementById('player-status').innerText = "AUDIO STREAM ACTIVE";
+            };
+            audioObj.onended = () => {
+                stopVisualizer();
+                document.getElementById('player-status').innerText = "STREAM ENDED";
+            };
+            audioObj.play();
+        }
+
+        function downloadCurrentAudio() {
+            if (currentAudioBlob) {
+                downloadBlob(currentAudioBlob, `neural_core_${new Date().getTime()}.mp3`);
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function splitText(text, maxLength) {
+            if (text.length <= maxLength) return [text];
+            const chunks = [];
+            let currentChunk = "";
+            const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+            for (const sentence of sentences) {
+                if ((currentChunk + sentence).length > maxLength) {
+                    if (currentChunk) chunks.push(currentChunk.trim());
+                    currentChunk = sentence;
+                } else {
+                    currentChunk += sentence;
+                }
+            }
+            if (currentChunk) chunks.push(currentChunk.trim());
+            return chunks;
+        }
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        async function fetchSpeechify(textChunk, voiceId, retries = 3) {
+            const url = "https://api.sws.speechify.com/v1/audio/speech";
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${config.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    input: textChunk,
+                    voice_id: voiceId,
+                    audio_format: 'mp3'
+                })
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.audio_data;
+                    }
+
+                    // If we get here, response was not ok. Check if retryable.
+                    if (response.status === 429 || response.status >= 500) {
+                        const errText = await response.text().catch(() => 'Unknown Error');
+                        console.warn(`Attempt ${i + 1} failed (Status ${response.status}): ${errText}. Retrying...`);
+
+                        // Exponential backoff: 1s, 2s, 4s...
+                        await sleep(1000 * Math.pow(2, i));
+                        continue;
+                    }
+
+                    // Non-retryable error (e.g. 400 Bad Request, 401 Unauthorized)
+                    const err = await response.text();
+                    throw new Error(`API Error ${response.status}: ${err}`);
+
+                } catch (error) {
+                    // Network errors (fetch failed completely) are also retryable
+                    if (i === retries - 1) throw error; // Rethrow on last attempt
+
+                    console.warn(`Attempt ${i + 1} network error: ${error.message}. Retrying...`);
+                    await sleep(1000 * Math.pow(2, i));
+                }
+            }
+        }
+
+        setInterval(() => {
+            const latency = Math.floor(Math.random() * 15) + 5;
+            document.getElementById('latency').innerText = latency;
+        }, 2000);
+
+        initUI();
+    </script>
+</body>
+
+</html>

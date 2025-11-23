@@ -1,144 +1,165 @@
-# Long Text-to-Speech Platform
+<div align="center">
 
-A Python-based text-to-speech platform that can handle long texts (up to 100,000+ characters) by intelligently splitting them into chunks and combining the audio output using the Speechify API.
+# 🧠 NEURALCORE
 
-## Features
+### Advanced Neural Text-to-Speech System
 
-- **Long Text Support**: Process texts up to 100,000+ characters by splitting into 1900-character chunks
-- **Intelligent Text Splitting**: Splits text at sentence boundaries when possible, falling back to punctuation and word boundaries
-- **Multiple Voice Models**: Support for Speechify's voice models (Stark, Liam)
-- **Audio Combining**: Seamlessly combines multiple audio chunks into a single MP3 file
-- **Modern GUI Interface**: Beautiful, user-friendly graphical interface with real-time feedback
-- **Command Line Interface**: Easy-to-use CLI with multiple input options
+*A stunning cyberpunk-themed TTS web application with immersive 3D visuals and premium AI voices*
 
-## Installation
+![Version](https://img.shields.io/badge/version-5.1.0-00f3ff)
+![Status](https://img.shields.io/badge/status-online-0aff0a)
+![License](https://img.shields.io/badge/license-MIT-bd00ff)
 
-1. Install the required dependencies:
-```bash
-pip install -r requirements.txt
+</div>
+
+---
+
+## 📖 Description
+
+**NEURALCORE** is a cutting-edge text-to-speech web application that combines premium AI voice synthesis with breathtaking cyberpunk aesthetics. Built as a single-file HTML application, it offers a complete TTS solution with zero backend dependencies, featuring:
+
+- 🎨 **Immersive 3D Interface** - Real-time Three.js particle animations
+- 🎙️ **Premium AI Voices** - Powered by Speechify's neural TTS engine
+- 💾 **Smart Local Storage** - IndexedDB with auto-cleanup system
+- 🌐 **100% Client-Side** - No server required, runs entirely in browser
+- 🔊 **Unlimited Length** - Handles up to 100,000 characters with intelligent chunking
+- 📱 **Fully Responsive** - Beautiful on desktop, tablet, and mobile
+
+Perfect for content creators, developers, accessibility tools, audiobook production, and anyone needing high-quality text-to-speech synthesis with a stunning user interface.
+
+---
+
+## ✨ Features
+
+### � Cyberpunk Aesthetic
+- **3D Background**: Real-time Three.js particle sphere with wireframe ring
+- **CRT Effects**: Authentic scanlines and vignette overlay
+- **Glitch Animations**: Dynamic hover effects
+- **HUD Design**: Futuristic glass-morphism panels
+- **5 Theme Colors**: Cyan, Green, Red, Purple, Gold
+
+### 🎙️ Text-to-Speech
+- **Premium Voices**: STARK (Narrative), LIAM (Casual), SIMBA (English)
+- **Speechify API**: High-quality neural voice synthesis
+- **Smart Chunking**: Automatically splits long text (up to 100,000 characters)
+- **Audio Visualizer**: Real-time animated bars synced to playback
+- **Progress Tracking**: Live synthesis status updates
+
+### 💾 Storage & History
+- **IndexedDB**: All audio saved locally in browser
+- **Auto-Purge**: Removes archives older than 20 minutes
+- **History Panel**: Replay, download, or delete past generations
+- **Storage Monitor**: Live usage tracking in header
+
+### ⚙️ Configuration
+- **API Key Management**: Store your Speechify API token
+- **Chunk Size Control**: Configure text splitting (1900 chars default)
+- **Theme Switcher**: Change core energy color
+- **Persistent Settings**: Saved in localStorage
+
+## 🚀 Quick Start
+
+1. **Open NEURALCORE**: Simply open `index.html` in any modern browser
+2. **Configure API**: Click settings (⚙️) and enter your Speechify API token
+3. **Select Voice Model**: Choose from STARK, LIAM, or SIMBA in the Voice Matrix
+4. **Input Text Stream**: Type or paste your text (up to 100,000 characters)
+5. **Initialize Synthesis**: Click "INITIALIZE_SYNTHESIS" to generate and play audio
+6. **Download**: Save your generated audio as MP3
+
+## 🔑 API Key
+
+The system uses the Speechify API. Get your key at:
+- [Speechify API Documentation](https://docs.sws.speechify.com/)
+
+Default key is included for testing (limited usage).
+
+## 🎮 Controls
+
+| Button | Function |
+|--------|----------|
+| ⚙️ | Open settings modal |
+| 🕐 | View generation history |
+| 🗑️ | Clear input text |
+| ⬇️ | Download current audio |
+| ▶️ | Generate and play audio |
+
+## 🛠️ Technical Stack
+
+- **Frontend**: Pure HTML5 + Vanilla JavaScript
+- **3D Graphics**: Three.js (r128)
+- **Styling**: TailwindCSS
+- **Fonts**: Orbitron, Share Tech Mono
+- **Icons**: Font Awesome 6.4
+- **Storage**: IndexedDB
+- **API**: Speechify TTS
+
+## 📁 Project Structure
+
+```
+neuralcore/
+├── index.html          # Complete NEURALCORE application
+├── README.md           # This file
+├── DEPLOY.md           # VPS deployment guide
+├── deploy_vps.sh       # Automated deployment script
+└── .gitignore          # Git ignore rules
 ```
 
-2. Set up your Speechify API token in the `.env` file:
-```
-SPEECHIFY_API_TOKEN=your_api_token_here
-```
+## 🎨 Customization
 
-## Available Voice Models
-
-- **stark**: Stark voice model
-- **liam**: Liam voice model
-
-## Usage
-
-### Web Interface (Recommended)
-
-Launch the Flask web application:
-
-```bash
-python app.py
+### Add New Voices
+Edit the `voices` array in the `<script>` section:
+```javascript
+const voices = [
+    { id: 'voice-id', name: 'NAME', type: 'TYPE', desc: 'Description' },
+    // Add more voices...
+];
 ```
 
-Then open your browser and navigate to: **http://localhost:8080**
-
-#### Web Interface Features:
-
-- **📝 Text Input**: Large text area with real-time character counter
-- **🎭 Voice Selection**: Dropdown menu with all available voices
-- **➕ Custom Voice Management**: Add your own Speechify voice IDs
-- **🎵 One-Click Generation**: Generate speech with animated progress bar
-- **▶️ Audio Playback**: Play generated audio directly in browser
-- **📥 Download**: Download generated MP3 files
-- **🗑️ Voice Management**: Delete custom voices (default voices protected)
-
-#### Adding Custom Voices:
-1. Click "Add Custom Voice" button
-2. Enter a unique voice key (e.g., `my_voice`)
-3. Enter the voice name and Speechify voice ID
-4. Add an optional description
-5. Click "Add Voice" to register it
-
-### Command Line Interface
-
-#### Process text:
-```bash
-python longtts.py --text "Your text here" --output output.mp3 --model stark
+### Change Auto-Purge Time
+Modify `RETENTION_MS` (default: 20 minutes):
+```javascript
+const RETENTION_MS = 20 * 60 * 1000; // milliseconds
 ```
 
-#### Process a text file:
-```bash
-python longtts.py --file input.txt --output output.mp3 --model liam
+### Adjust Chunk Size
+Default is 1900 characters (Speechify limit ~5000):
+```javascript
+chunkSize: parseInt(localStorage.getItem('tts_chunk_size')) || 1900,
 ```
 
-#### List available voice models:
-```bash
-python longtts.py --list-models
+## 🌐 Browser Support
+
+- ✅ Chrome/Edge (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ⚠️ Requires IndexedDB and WebGL support
+
+## 📝 License
+
+MIT License - Feel free to use and modify
+
+---
+
+## 🔮 System Status
+
+```
+┌─────────────────────────────────────┐
+│  NEURALCORE // SYSTEM INFORMATION   │
+├─────────────────────────────────────┤
+│  VERSION:     5.1.0                 │
+│  STATUS:      ONLINE                │
+│  PROTOCOL:    TLS 1.3               │
+│  SYSTEM_ID:   0x4A92-F              │
+│  UPTIME:      99.9%                 │
+└─────────────────────────────────────┘
 ```
 
-#### Quiet mode (suppress verbose output):
-```bash
-python longtts.py --file input.txt --output output.mp3 --quiet
-```
-
-### Python API
-
-```python
-from longtts import LongTextToSpeech
-
-# Initialize with API token
-tts = LongTextToSpeech(api_token="your_token_here")
-
-# Or use environment variable
-tts = LongTextToSpeech()  # Reads from SPEECHIFY_API_TOKEN
-
-# Process long text
-long_text = "Your very long text here..." * 1000
-tts.process_long_text(
-    text=long_text,
-    output_path="output.mp3",
-    model="stark",
-    verbose=True
-)
-
-# List available models
-tts.list_models()
-```
-
-## How It Works
-
-1. **Text Splitting**: The platform intelligently splits long text into chunks of up to 1900 characters, preferring to break at sentence boundaries
-2. **API Processing**: Each chunk is sent to the Speechify API for text-to-speech conversion
-3. **Audio Combining**: All audio chunks are combined into a single MP3 file with small pauses between chunks
-4. **Output**: The final combined audio file is saved to the specified location
-
-## Command Line Arguments
-
-- `--text, -t`: Text to convert to speech
-- `--file, -f`: Text file to convert to speech
-- `--output, -o`: Output MP3 file path (default: output.mp3)
-- `--model, -m`: Voice model to use (stark, liam)
-- `--token`: Speechify API token (or set SPEECHIFY_API_TOKEN env var)
-- `--list-models`: List available voice models
-- `--quiet, -q`: Suppress verbose output
-
-## Requirements
-
-- Python 3.7+
-- Speechify API token
-- Internet connection for API calls
-
-## Error Handling
-
-The platform includes robust error handling for:
-- API request failures
-- Invalid text input
-- File I/O errors
-- Audio processing errors
+---
 
 <div align="center">
 
-### Developed by [@leksautomate](https://youtube.com/@leksautomate)
+**NEURALCORE // SECURE CONNECTION ESTABLISHED**
 
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@leksautomate)
-[![TikTok](https://img.shields.io/badge/TikTok-000000?style=for-the-badge&logo=tiktok&logoColor=white)](https://tiktok.com/@leksautomate)
+*Built with ❤️ for the future of AI voice synthesis*
 
 </div>

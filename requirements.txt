@@ -1,9 +1,0 @@
-Flask
-requests
-pydub
-python-dotenv
-gunicorn
-APScheduler>=2.31.0
-pydub>=0.25.1
-python-dotenv>=1.0.0
-flask>=2.3.0
